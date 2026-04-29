@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jeu de Toupie - Battle</title>
+    <style>
+        body { display: flex; flex-direction: column; align-items: center; background: #222; color: white; font-family: sans-serif; }
+        canvas { border: 5px solid #444; border-radius: 50%; background: #333; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .controls { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Battle de Toupies</h1>
+    <canvas id="arena" width="500" height="500"></canvas>
+    <div class="controls">
+        <p>Appuyez sur <strong>Espace</strong> pour lancer les toupies !</p>
+    </div>
+
+<script>
+const canvas = document.getElementById('arena');
+const ctx = canvas.getContext('2d');
+
+class Toupie {
+    constructor(x, y, color, controls) {
+        this.x = x;
+        this.y = y;
+        this.radius = 20;
+        this.color = color;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.rotation = 0;
+        this.spin = 0; // Vitesse de rotation
+        this.friction = 0.985; // Ralentissement progressif
+    }
+
+    lancer() {
+        this.speedX = (Math.random() - 0.5) * 15;
+        this.speedY = (Math.random() - 0.5) * 15;
+        this.spin = 20 + Math.random() * 10;
+    }
+
+    update() {
+        // Déplacement
+        this.x += this.speedX;
+        this.y += this.speedY;
+        
+        // Physique de rotation et friction
+        this.speedX *= this.friction;
+        this.speedY *= this.friction;
+        this.spin *= 0.995;
+        this.rotation += this.spin;
+
+        // Collision avec les bords de l'arène (cercle)
+        let dist = Math.hypot(this.x - 250, this.y - 250);
+        if (dist > 250 - this.radius) {
+            let angle = Math.atan2(this.y - 250, this.x - 250);
+            this.speedX = -Math.cos(angle) * 5;
+            this.speedY = -Math.sin(angle) * 5;
+        }
+    }
+
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation * Math.PI / 180);
+        
+        // Corps de la toupie
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Motif pour voir la rotation
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(-this.radius, 0);
+        ctx.lineTo(this.radius, 0);
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+}
+
+const t1 = new Toupie(200, 250, "#e74c3c");
+const t2 = new Toupie(300, 250, "#3498db");
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    t1.update();
+    t2.update();
+    
+    // Collision entre les deux toupies
+    let d = Math.hypot(t1.x - t2.x, t1.y - t2.y);
+    if (d < t1.radius + t2.radius) {
+        // On inverse les vitesses (choc simple)
+        [t1.speedX, t2.speedX] = [t2.speedX * 1.2, t1.speedX * 1.2];
+        [t1.speedY, t2.speedY] = [t2.speedY * 1.2, t1.speedY * 1.2];
+    }
+
+    t1.draw();
+    t2.draw();
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.code === "Space") {
+        t1.lancer();
+        t2.lancer();
+    }
+});
+
+animate();
+</script>
+</body>
+</html>
