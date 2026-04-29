@@ -1,681 +1,352 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:sans-serif;background:#f5f5f7;}
-#root{display:flex;flex-direction:column;width:100%;max-width:390px;margin:0 auto;background:#fff;min-height:100vh;position:relative;}
-#header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #e5e5ea;background:#fff;}
-#units-display{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;color:#222;}
-#level-info{font-size:12px;color:#888;}
-#shop-btn{width:36px;height:36px;border-radius:50%;background:#534AB7;border:none;cursor:pointer;font-size:18px;}
-#hp-section{display:flex;justify-content:space-between;align-items:flex-end;padding:8px 12px 6px;gap:10px;background:#f5f5f7;border-bottom:1px solid #e5e5ea;}
-.hp-col{flex:1;}
-.hp-col.right{text-align:right;}
-.hp-name{font-size:12px;font-weight:600;color:#222;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.hp-bar{width:100%;height:8px;background:#e5e5ea;border-radius:4px;overflow:hidden;}
-.hp-fill{height:100%;border-radius:4px;transition:width 0.2s;}
-#p-hp-fill{background:#534AB7;}
-#b-hp-fill{background:#D85A30;}
-.hp-num{font-size:11px;color:#888;margin-top:2px;}
-#vs-badge{font-size:11px;font-weight:700;color:#aaa;align-self:center;flex-shrink:0;}
-#arena-wrap{display:flex;align-items:center;justify-content:center;padding:10px 0;background:#0d0d1a;position:relative;}
-#arena{position:relative;width:300px;height:280px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#1a1a3e,#0d0d1a 70%);border:4px solid #534AB7;overflow:hidden;touch-action:none;}
-#arena-ring{position:absolute;inset:12px;border-radius:50%;border:1px solid rgba(83,74,183,0.3);pointer-events:none;}
-#arena-ring2{position:absolute;inset:28px;border-radius:50%;border:1px solid rgba(83,74,183,0.15);pointer-events:none;}
-.toupie{position:absolute;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;user-select:none;touch-action:none;transition:box-shadow 0.1s;}
-#p-toupie{background:radial-gradient(circle,#7F77DD,#3C3489);border:2px solid #AFA9EC;box-shadow:0 0 10px #7F77DD66;}
-#b-toupie{border:2px solid #F0997B;}
-#result-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.78);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:50%;}
-#result-overlay.show{display:flex;}
-#result-title{font-size:18px;font-weight:700;color:#fff;}
-#result-sub{font-size:12px;color:#AFA9EC;text-align:center;padding:0 18px;}
-#result-btn{padding:9px 22px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Battle de Toupies</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: sans-serif; background: #111; overflow: hidden; height: 100vh; display: flex; justify-content: center; }
+        
+        #root { 
+            display: flex; flex-direction: column; width: 100%; max-width: 400px; 
+            background: #fff; height: 100vh; position: relative;
+        }
 
-/* COUNTDOWN OVERLAY */
-#countdown-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);display:none;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;z-index:5;}
-#countdown-overlay.show{display:flex;}
-#countdown-num{font-size:72px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 30px #534AB7;}
-#countdown-go{font-size:36px;font-weight:900;color:#7F77DD;display:none;}
+        /* HEADER & STATS */
+        #header { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #ddd; background: #fff; z-index: 10; }
+        #units-display { font-weight: bold; color: #534AB7; }
+        #level-info { font-size: 12px; color: #888; }
+        #shop-btn { background: none; border: none; font-size: 20px; cursor: pointer; }
 
-.dmg-popup{position:absolute;font-size:13px;font-weight:700;pointer-events:none;animation:floatUp 0.9s forwards;z-index:5;}
-@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-36px)}}
-#log-bar{padding:5px 12px;background:#f5f5f7;font-size:12px;color:#666;text-align:center;min-height:28px;display:flex;align-items:center;justify-content:center;border-top:1px solid #e5e5ea;}
-#spin-wrap{padding:8px 12px;}
-#spin-btn{width:100%;padding:12px;border-radius:10px;background:#534AB7;color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:background 0.2s;}
-#spin-btn:disabled{background:#e5e5ea;color:#aaa;cursor:default;}
-#basket-wrap{padding:4px 12px 10px;border-top:1px solid #e5e5ea;}
-#basket-label{font-size:11px;color:#888;margin-bottom:4px;}
-#basket{display:flex;align-items:center;gap:8px;min-height:58px;background:#f5f5f7;border-radius:10px;border:1px solid #e5e5ea;padding:6px 10px;overflow-x:auto;}
-.basket-item{display:flex;flex-direction:column;align-items:center;gap:2px;background:#fff;border-radius:8px;padding:5px 10px;border:1.5px solid #e5e5ea;cursor:pointer;flex-shrink:0;}
-.basket-item.active-slot{border-color:#534AB7;background:#EEEDFE;}
-.basket-item span:first-child{font-size:20px;}
-.basket-item span:last-child{font-size:10px;color:#888;}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:30;display:none;align-items:center;justify-content:center;}
-.modal-bg.show{display:flex;}
-.modal-card{background:#fff;border-radius:18px;padding:26px 20px;width:90%;max-width:340px;text-align:center;}
-.modal-card h2{font-size:17px;font-weight:700;margin-bottom:8px;}
-.modal-card p{font-size:13px;color:#888;margin-bottom:16px;}
-.modal-input{width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid #e5e5ea;font-size:15px;margin-bottom:14px;text-align:center;outline:none;}
-.modal-input:focus{border-color:#534AB7;}
-.btn-primary{padding:12px 0;width:100%;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;}
-.btn-secondary{padding:10px 0;width:100%;background:none;color:#888;border:1.5px solid #e5e5ea;border-radius:10px;font-size:14px;cursor:pointer;}
-#shop-modal{position:fixed;inset:0;background:#fff;z-index:20;display:none;flex-direction:column;}
-#shop-modal.show{display:flex;}
-#shop-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e5ea;}
-#shop-header span:first-child{font-size:16px;font-weight:700;}
-#shop-units-lbl{font-size:13px;color:#534AB7;font-weight:600;}
-#shop-close{background:none;border:none;font-size:22px;cursor:pointer;color:#aaa;}
-#shop-body{flex:1;overflow-y:auto;padding:14px;}
-.shop-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;border:1px solid #e5e5ea;margin-bottom:10px;background:#f9f9f9;}
-.shop-item-icon{font-size:28px;flex-shrink:0;}
-.shop-item-info{flex:1;}
-.shop-item-name{font-size:14px;font-weight:600;color:#222;}
-.shop-item-desc{font-size:12px;color:#888;margin-top:2px;}
-.type-badge{font-size:11px;margin-top:4px;padding:2px 8px;border-radius:4px;display:inline-block;}
-.type-att{background:#FAECE7;color:#993C1D;}
-.type-def{background:#EEEDFE;color:#3C3489;}
-.buy-btn{padding:8px 14px;border-radius:8px;background:#534AB7;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;}
-.buy-btn:disabled{background:#e5e5ea;color:#aaa;cursor:default;}
-.player-row{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;border:1.5px solid #e5e5ea;margin-bottom:8px;cursor:pointer;background:#f9f9f9;}
-.player-row:hover{border-color:#534AB7;}
-.player-row-name{font-size:15px;font-weight:600;color:#222;}
-.player-row-sub{font-size:12px;color:#888;}
-.player-row-badge{font-size:12px;color:#534AB7;font-weight:600;}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@keyframes hit{0%,100%{transform:scale(1)}50%{transform:scale(1.28)}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.spinning{animation:spin var(--spd,0.3s) linear infinite;}
-.hitting{animation:hit 0.18s;}
-</style>
+        /* HP BARS */
+        #hp-section { display: flex; justify-content: space-between; padding: 10px; background: #f8f8f8; border-bottom: 1px solid #eee; }
+        .hp-col { flex: 1; }
+        .hp-bar { width: 100%; height: 10px; background: #e5e5ea; border-radius: 5px; overflow: hidden; margin-top: 4px; }
+        .hp-fill { height: 100%; transition: width 0.3s ease; }
+        #p-hp-fill { background: #534AB7; }
+        #b-hp-fill { background: #D85A30; }
+        .hp-name { font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+        /* ARENA */
+        #arena-wrap { flex: 1; display: flex; align-items: center; justify-content: center; background: #0d0d1a; overflow: hidden; position: relative; }
+        #arena { 
+            position: relative; width: 320px; height: 320px; border-radius: 50%; 
+            background: radial-gradient(circle, #1a1a3e, #0d0d1a 80%); 
+            border: 6px solid #534AB7; touch-action: none;
+        }
+
+        .toupie { 
+            position: absolute; width: 44px; height: 44px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 24px; 
+            z-index: 2; transition: transform 0.1s linear;
+        }
+        #p-toupie { background: radial-gradient(circle, #7F77DD, #3C3489); border: 2px solid #fff; }
+        #b-toupie { background: radial-gradient(circle, #f0997b, #d85a30); border: 2px solid #fff; }
+
+        /* OVERLAYS */
+        .overlay { 
+            position: absolute; inset: 0; background: rgba(0,0,0,0.8); 
+            display: none; flex-direction: column; align-items: center; 
+            justify-content: center; z-index: 100; text-align: center; color: white;
+            border-radius: 50%;
+        }
+        .overlay.show { display: flex; }
+        .overlay h2 { margin-bottom: 15px; }
+        
+        /* BOUTONS */
+        button { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: #534AB7; color: white; }
+        .btn-primary:disabled { background: #ccc; }
+
+        #spin-wrap { padding: 15px; background: #fff; border-top: 1px solid #ddd; }
+        #spin-btn { width: 100%; height: 50px; font-size: 18px; }
+
+        /* BASKET */
+        #basket-wrap { padding: 10px; background: #f9f9f9; border-top: 1px solid #eee; overflow-x: auto; }
+        #basket { display: flex; gap: 10px; padding-bottom: 5px; }
+        .basket-item { 
+            min-width: 60px; padding: 8px; background: #fff; border: 2px solid #eee; 
+            border-radius: 8px; text-align: center; font-size: 10px;
+        }
+        .basket-item.active { border-color: #534AB7; background: #EEEDFE; }
+
+        /* MODAL */
+        .modal-bg { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
+            z-index: 200; display: none; align-items: center; justify-content: center; 
+        }
+        .modal-bg.show { display: flex; }
+        .modal-card { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; }
+        .modal-input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; }
+
+        .dmg-popup { position: absolute; font-weight: bold; color: red; pointer-events: none; animation: floatUp 0.8s forwards; z-index: 50; }
+        @keyframes floatUp { to { transform: translateY(-40px); opacity: 0; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spinning { animation: spin 0.3s linear infinite; }
+    </style>
 </head>
 <body>
+
 <div id="root">
-  <div id="header">
-    <div id="units-display">💎 <span id="units-val">0</span> unités</div>
-    <span id="level-info">Niveau 1</span>
-    <button id="shop-btn">🛒</button>
-  </div>
-  <div id="hp-section">
-    <div class="hp-col">
-      <div class="hp-name" id="p-name-lbl">Joueur</div>
-      <div class="hp-bar"><div class="hp-fill" id="p-hp-fill" style="width:100%"></div></div>
-      <div class="hp-num" id="p-hp-num">100</div>
+    <div id="header">
+        <div id="units-display">💎 <span id="units-val">0</span></div>
+        <div id="level-info">Niveau 1</div>
+        <button id="shop-btn">🛒</button>
     </div>
-    <div id="vs-badge">VS</div>
-    <div class="hp-col right">
-      <div class="hp-name" style="text-align:right">Bots</div>
-      <div class="hp-bar"><div class="hp-fill" id="b-hp-fill" style="width:100%"></div></div>
-      <div class="hp-num" id="b-hp-num">100</div>
+
+    <div id="hp-section">
+        <div class="hp-col">
+            <div class="hp-name" id="p-name">Joueur</div>
+            <div class="hp-bar"><div id="p-hp-fill" class="hp-fill" style="width:100%"></div></div>
+        </div>
+        <div style="padding: 0 10px; font-weight: bold; align-self: flex-end;">VS</div>
+        <div class="hp-col" style="text-align: right;">
+            <div class="hp-name">Robot</div>
+            <div class="hp-bar"><div id="b-hp-fill" class="hp-fill" style="width:100%"></div></div>
+        </div>
     </div>
-  </div>
-  <div id="arena-wrap">
-    <div id="arena">
-      <div id="arena-ring"></div><div id="arena-ring2"></div>
-      <div id="p-toupie" class="toupie">🌀</div>
-      <div id="b-toupie" class="toupie">🤖</div>
-      <div id="countdown-overlay">
-        <div id="countdown-num">3</div>
-        <div id="countdown-go">GO!</div>
-      </div>
-      <div id="result-overlay">
-        <div id="result-title"></div>
-        <div id="result-sub"></div>
-        <button id="result-btn">Rejouer</button>
-      </div>
+
+    <div id="arena-wrap">
+        <div id="arena">
+            <div id="p-toupie" class="toupie">🌀</div>
+            <div id="b-toupie" class="toupie">🤖</div>
+
+            <div id="result-overlay" class="overlay">
+                <h2 id="result-title">Gagné !</h2>
+                <p id="result-sub" style="margin-bottom: 20px;"></p>
+                <button id="result-btn" class="btn-primary">REJOUER</button>
+            </div>
+
+            <div id="cd-overlay" class="overlay">
+                <h1 id="cd-text" style="font-size: 80px;">3</h1>
+            </div>
+        </div>
     </div>
-  </div>
-  <div id="log-bar">Selectionne ton profil pour commencer!</div>
-  <div id="spin-wrap"><button id="spin-btn" disabled>🌀 Faire tourner!</button></div>
-  <div id="basket-wrap">
-    <div id="basket-label">Mes toupies — appuie pour selectionner</div>
-    <div id="basket">
-      <div id="basket-def" class="basket-item active-slot" data-idx="-1">
-        <span>🌀</span><span>Defense</span>
-      </div>
+
+    <div id="spin-wrap">
+        <button id="spin-btn" class="btn-primary">🌀 FAIRE TOURNER !</button>
     </div>
-  </div>
+
+    <div id="basket-wrap">
+        <div id="basket">
+            <div class="basket-item active" onclick="selectSlot(-1, this)">
+                <div style="font-size: 20px;">🌀</div><div>Base</div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- SHOP -->
-<div id="shop-modal">
-  <div id="shop-header">
-    <span>Magasin</span>
-    <span id="shop-units-lbl">0 unites</span>
-    <button id="shop-close">X</button>
-  </div>
-  <div id="shop-body">
-    <p style="font-size:12px;color:#888;margin-bottom:12px;">Achete des toupies, elles seront dans ton panier!</p>
-    <div class="shop-item">
-      <div class="shop-item-icon">🔴</div>
-      <div class="shop-item-info">
-        <div class="shop-item-name">Toupie Attaque</div>
-        <div class="shop-item-desc">Fonce sur l'adversaire — degats eleves</div>
-        <span class="type-badge type-att">Attaque</span>
-      </div>
-      <button class="buy-btn" data-cost="5" data-name="Attaque" data-icon="🔴" data-type="att">5 💎</button>
+<div id="name-modal" class="modal-bg show">
+    <div class="modal-card">
+        <h2>Ton Nom ?</h2>
+        <input type="text" id="name-input" class="modal-input" placeholder="Pseudo..." maxlength="12">
+        <button id="name-confirm" class="btn-primary" style="width: 100%;">C'EST PARTI !</button>
     </div>
-    <div class="shop-item">
-      <div class="shop-item-icon">🔵</div>
-      <div class="shop-item-info">
-        <div class="shop-item-name">Toupie Defense+</div>
-        <div class="shop-item-desc">Resistance amelioree, contre-attaque</div>
-        <span class="type-badge type-def">Defense</span>
-      </div>
-      <button class="buy-btn" data-cost="4" data-name="Defense+" data-icon="🔵" data-type="defplus">4 💎</button>
-    </div>
-  </div>
-</div>
-
-<!-- NAME MODAL -->
-<div class="modal-bg show" id="name-modal">
-  <div class="modal-card">
-    <h2>🌀 Bienvenue!</h2>
-    <p id="name-modal-sub">Comment tu t'appelles, champion?</p>
-    <input class="modal-input" id="name-input" type="text" placeholder="Ton prenom..." maxlength="14" autocomplete="off"/>
-    <button class="btn-primary" id="name-confirm">Jouer! ⚔️</button>
-    <button class="btn-secondary" id="name-switch">Changer de joueur 👤</button>
-  </div>
-</div>
-
-<!-- PLAYER SELECT -->
-<div class="modal-bg" id="player-select-modal">
-  <div class="modal-card" style="text-align:left;">
-    <h2 style="text-align:center;">👤 Choisir un joueur</h2>
-    <p style="text-align:center;">Selectionne ton profil ou crees-en un nouveau.</p>
-    <div id="player-list"></div>
-    <button class="btn-primary" id="new-player-btn">+ Nouveau joueur</button>
-    <button class="btn-secondary" id="player-select-cancel">Annuler</button>
-  </div>
 </div>
 
 <script>
-// ===== STORAGE =====
-const SAVE_KEY = 'toupie_profiles_v4';
-function loadProfiles(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY))||{}; }catch(e){ return {}; } }
-function saveProfiles(p){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(p)); }catch(e){} }
+    // --- VARIABLES GLOBALES ---
+    let player = { name: "", units: 0, level: 1, basket: [], activeIdx: -1 };
+    let gameActive = false;
+    let pHp = 100, bHp = 100;
+    let px = 60, py = 160, bx = 260, by = 160;
+    let pvx = 0, pvy = 0, bvx = 0, bvy = 0;
+    let dragging = false;
+    let raf;
 
-// ===== CONSTANTS =====
-const CX=150, CY=140, RX=146, RY=133, T_R=22;
-const TYPES = {
-  def:    { icon:'🌀', label:'Defense',  atkMult:0.8, defMult:1.3, spd:'0.28s' },
-  att:    { icon:'🔴', label:'Attaque',  atkMult:1.4, defMult:0.7, spd:'0.18s' },
-  defplus:{ icon:'🔵', label:'Defense+', atkMult:1.0, defMult:1.5, spd:'0.25s' }
-};
+    const CX = 160, CY = 160, R = 145, T_R = 22;
 
-// Recoil strength on mutual hit — strong enough to separate toupies
-const RECOIL_STRENGTH = 5.5;
-// Minimum separation speed after recoil
-const MIN_SEP_SPEED = 3.0;
-// Cooldown between continuous hits (ms) — enough time to re-approach
-const CONTINUOUS_COOLDOWN = 900;
-// Border hit cooldown (ms)
-const BORDER_COOLDOWN = 700;
+    // --- DOM ELEMENTS ---
+    const pEl = document.getElementById('p-toupie');
+    const bEl = document.getElementById('b-toupie');
+    const resOverlay = document.getElementById('result-overlay');
+    const spinBtn = document.getElementById('spin-btn');
 
-// ===== STATE =====
-let profiles = {};
-let currentPlayer = null;
-let gameRunning = false, gameOver = false, countingDown = false;
-let pHp=100, bHp=100;
-let px=55, py=140, bx=245, by=140;
-let pvx=0, pvy=0, bvx=0, bvy=0;
-let botType='att', dragging=false, targetX=55, targetY=140, raf=null;
-let lvlupShown=false;
-let lastCollision=0, lastBorderHit={p:0,b:0};
-
-// ===== DOM =====
-const arenaEl=document.getElementById('arena');
-const pEl=document.getElementById('p-toupie');
-const bEl=document.getElementById('b-toupie');
-const spinBtn=document.getElementById('spin-btn');
-const logBar=document.getElementById('log-bar');
-const resultOverlay=document.getElementById('result-overlay');
-const resultTitle=document.getElementById('result-title');
-const resultSub=document.getElementById('result-sub');
-const resultBtn=document.getElementById('result-btn');
-const unitsVal=document.getElementById('units-val');
-const shopModal=document.getElementById('shop-modal');
-const shopUnitsLbl=document.getElementById('shop-units-lbl');
-const basketEl=document.getElementById('basket');
-const nameModal=document.getElementById('name-modal');
-const nameInput=document.getElementById('name-input');
-const pNameLbl=document.getElementById('p-name-lbl');
-const cdOverlay=document.getElementById('countdown-overlay');
-const cdNum=document.getElementById('countdown-num');
-const cdGo=document.getElementById('countdown-go');
-
-// ===== PROFILES =====
-function saveCurrentPlayer(){
-  if(!currentPlayer)return;
-  profiles[currentPlayer.name]={...currentPlayer};
-  saveProfiles(profiles);
-}
-
-function loadPlayer(name){
-  profiles=loadProfiles();
-  const p=profiles[name];
-  currentPlayer=p?{...p}:{name,units:0,level:1,basket:[],activeIdx:-1};
-  applyPlayerState();
-}
-
-function applyPlayerState(){
-  if(!currentPlayer)return;
-  pNameLbl.textContent=currentPlayer.name;
-  unitsVal.textContent=currentPlayer.units;
-  shopUnitsLbl.textContent=currentPlayer.units+' unites';
-  document.getElementById('level-info').textContent='Niveau '+currentPlayer.level;
-  renderBasket();
-  updateShopBtns();
-  spinBtn.disabled=false;
-  lvlupShown=currentPlayer.units>=10;
-  log('Bienvenue '+currentPlayer.name+'! Lance ta toupie!');
-}
-
-// ===== NAME MODAL =====
-document.getElementById('name-confirm').addEventListener('click',()=>{
-  const n=nameInput.value.trim();
-  if(!n)return;
-  nameModal.classList.remove('show');
-  loadPlayer(n);
-});
-nameInput.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('name-confirm').click();});
-document.getElementById('name-switch').addEventListener('click',()=>{
-  nameModal.classList.remove('show');
-  showPlayerSelect();
-});
-
-// ===== PLAYER SELECT =====
-function showPlayerSelect(){
-  profiles=loadProfiles();
-  const playerList=document.getElementById('player-list');
-  playerList.innerHTML='';
-  const names=Object.keys(profiles);
-  if(names.length===0){
-    playerList.innerHTML='<p style="font-size:13px;color:#aaa;text-align:center;margin-bottom:12px;">Aucun profil sauvegarde.</p>';
-  }
-  names.forEach(name=>{
-    const p=profiles[name];
-    const row=document.createElement('div');
-    row.className='player-row';
-    row.innerHTML=`<div><div class="player-row-name">${p.name}</div><div class="player-row-sub">Niveau ${p.level} · ${p.basket.length} toupie(s)</div></div><div class="player-row-badge">${p.units} 💎</div>`;
-    row.addEventListener('click',()=>{
-      document.getElementById('player-select-modal').classList.remove('show');
-      loadPlayer(name);
-    });
-    playerList.appendChild(row);
-  });
-  document.getElementById('player-select-modal').classList.add('show');
-}
-
-document.getElementById('new-player-btn').addEventListener('click',()=>{
-  document.getElementById('player-select-modal').classList.remove('show');
-  nameInput.value='';
-  nameModal.classList.add('show');
-});
-document.getElementById('player-select-cancel').addEventListener('click',()=>{
-  document.getElementById('player-select-modal').classList.remove('show');
-  if(!currentPlayer)nameModal.classList.add('show');
-});
-
-// ===== UNITS =====
-function setUnits(n){
-  currentPlayer.units=Math.max(0,n);
-  unitsVal.textContent=currentPlayer.units;
-  shopUnitsLbl.textContent=currentPlayer.units+' unites';
-  updateShopBtns();
-  saveCurrentPlayer();
-  if(currentPlayer.units>=10&&!lvlupShown&&currentPlayer.level===1){
-    lvlupShown=true;
-    setTimeout(()=>document.getElementById('lvlup-modal').classList.add('show'),700);
-  }
-}
-
-function updateShopBtns(){
-  document.querySelectorAll('.buy-btn').forEach(b=>{
-    b.disabled=!currentPlayer||currentPlayer.units<parseInt(b.dataset.cost);
-  });
-}
-
-// ===== HP =====
-function setHP(who,val){
-  const v=Math.max(0,Math.min(100,val));
-  if(who==='p'){pHp=v;document.getElementById('p-hp-fill').style.width=v+'%';document.getElementById('p-hp-num').textContent=Math.round(v);}
-  else{bHp=v;document.getElementById('b-hp-fill').style.width=v+'%';document.getElementById('b-hp-num').textContent=Math.round(v);}
-}
-
-function showDmg(x,y,txt,color){
-  const d=document.createElement('div');
-  d.className='dmg-popup';
-  d.textContent=txt;
-  d.style.cssText=`left:${x}px;top:${y}px;color:${color};`;
-  arenaEl.appendChild(d);
-  setTimeout(()=>d.remove(),900);
-}
-
-// ===== POSITIONS =====
-function setPos(el,x,y){el.style.left=(x-T_R)+'px';el.style.top=(y-T_R)+'px';}
-
-function clamp(x,y){
-  const dx=x-CX,dy=y-CY;
-  const d=Math.sqrt(dx*dx/RX/RX+dy*dy/RY/RY);
-  if(d>1){const s=1/d;return[CX+dx*s,CY+dy*s];}
-  return[x,y];
-}
-
-function isAtBorder(x,y){
-  const dx=x-CX,dy=y-CY;
-  return Math.sqrt(dx*dx/RX/RX+dy*dy/RY/RY)>0.88;
-}
-
-function log(msg){logBar.textContent=msg;}
-function getPlayerType(){
-  if(!currentPlayer)return TYPES.def;
-  const idx=currentPlayer.activeIdx;
-  if(idx===-1)return TYPES.def;
-  const t=currentPlayer.basket[idx];
-  return t?(TYPES[t.type]||TYPES.def):TYPES.def;
-}
-
-// ===== COUNTDOWN =====
-function startCountdown(){
-  if(gameRunning||countingDown||!currentPlayer)return;
-  countingDown=true;
-  spinBtn.disabled=true;
-  cdNum.style.display='block';
-  cdGo.style.display='none';
-  cdOverlay.classList.add('show');
-  let count=3;
-  cdNum.textContent=count;
-  log('Positionne ton doigt sur ta toupie!');
-
-  const iv=setInterval(()=>{
-    count--;
-    if(count>0){
-      cdNum.textContent=count;
-    } else {
-      clearInterval(iv);
-      cdNum.style.display='none';
-      cdGo.style.display='block';
-      setTimeout(()=>{
-        cdOverlay.classList.remove('show');
-        cdGo.style.display='none';
-        countingDown=false;
-        launchGame();
-      },600);
-    }
-  },1000);
-}
-
-// ===== GAME =====
-function launchGame(){
-  gameRunning=true; gameOver=false;
-  lastCollision=0; lastBorderHit={p:0,b:0};
-
-  botType=Math.random()<0.5?'att':'def';
-  bEl.textContent=botType==='att'?'⚔️':'🛡️';
-  bEl.style.background=botType==='att'
-    ?'radial-gradient(circle,#D85A30,#993C1D)'
-    :'radial-gradient(circle,#1D9E75,#085041)';
-
-  const pt=getPlayerType();
-  pEl.textContent=pt.icon;
-  pEl.style.setProperty('--spd',pt.spd);
-  bEl.style.setProperty('--spd',botType==='att'?'0.2s':'0.42s');
-  pEl.classList.add('spinning');
-  bEl.classList.add('spinning');
-
-  pvx=3.2+Math.random()*1.5; pvy=(Math.random()-0.5)*2;
-  const ang=Math.atan2(py-by,px-bx);
-  const spd=botType==='att'?3.5+Math.random():1.8+Math.random();
-  bvx=Math.cos(ang)*spd; bvy=Math.sin(ang)*spd;
-  targetX=px; targetY=py;
-
-  log(botType==='att'?'Bot Attaque! Esquive et contre-attaque!':'Bot Defense! Fonce dessus!');
-  if(raf)cancelAnimationFrame(raf);
-  raf=requestAnimationFrame(loop);
-}
-
-function loop(){
-  if(gameOver)return;
-  const now=performance.now();
-
-  // Player movement via finger
-  if(dragging){ pvx=pvx*0.65+(targetX-px)*0.14; pvy=pvy*0.65+(targetY-py)*0.14; }
-
-  px+=pvx; py+=pvy;
-  let[npx,npy]=clamp(px,py);
-  const pWasBorder=isAtBorder(px,py)||(npx!==px||npy!==py);
-  if(npx!==px||npy!==py){pvx*=-0.55;pvy*=-0.55;}
-  px=npx; py=npy;
-
-  if(pWasBorder&&now-lastBorderHit.p>BORDER_COOLDOWN){
-    lastBorderHit.p=now;
-    setHP('p',pHp-2);
-    showDmg(px-T_R,py-T_R-12,'-2','#534AB7');
-    log('Bordure! -2');
-  }
-
-  // Bot AI
-  if(botType==='att'){
-    const ang=Math.atan2(py-by,px-bx);
-    bvx+=Math.cos(ang)*0.25; bvy+=Math.sin(ang)*0.25;
-    const bs=Math.sqrt(bvx*bvx+bvy*bvy);
-    if(bs>5){bvx=bvx/bs*5;bvy=bvy/bs*5;}
-  } else {
-    const ang=Math.atan2(by-CY,bx-CX)+0.05;
-    const tr=72;
-    bvx=bvx*0.82+(CX+Math.cos(ang)*tr-bx)*0.09;
-    bvy=bvy*0.82+(CY+Math.sin(ang)*tr-by)*0.09;
-  }
-  bx+=bvx; by+=bvy;
-  let[nbx,nby]=clamp(bx,by);
-  const bWasBorder=isAtBorder(bx,by)||(nbx!==bx||nby!==by);
-  if(nbx!==bx||nby!==by){bvx*=-0.55;bvy*=-0.55;}
-  bx=nbx; by=nby;
-
-  if(bWasBorder&&now-lastBorderHit.b>BORDER_COOLDOWN){
-    lastBorderHit.b=now;
-    setHP('b',bHp-2);
-    showDmg(bx-T_R,by-T_R-12,'-2','#D85A30');
-  }
-
-  pvx*=0.993; pvy*=0.993; bvx*=0.993; bvy*=0.993;
-  setPos(pEl,px,py); setPos(bEl,bx,by);
-
-  // ===== COLLISION =====
-  const dx=px-bx, dy=py-by, dist=Math.sqrt(dx*dx+dy*dy);
-  if(dist<T_R*2+2){
-    const nx=dx/dist||1, ny=dy/dist||0;
-    const relVx=pvx-bvx, relVy=pvy-bvy;
-    const rv=relVx*nx+relVy*ny;
-
-    // --- DAMAGE ---
-    const timeSinceLast=now-lastCollision;
-    const isContinuous=timeSinceLast<CONTINUOUS_COOLDOWN;
-    const pt=getPlayerType();
-
-    if(timeSinceLast>80){ // debounce: only apply dmg if enough time passed
-      if(isContinuous){
-        // Continuous mutual clash → -5 each
-        setHP('p',pHp-5/pt.defMult);
-        setHP('b',bHp-5*pt.atkMult);
-        showDmg(px-T_R,py-T_R-14,'-5','#534AB7');
-        showDmg(bx-T_R,by-T_R-14,'-5','#D85A30');
-        log('Choc continu! -5 chacun');
-      } else {
-        // Directional hit detection
-        const pDot=pvx*nx+pvy*ny;    // p moving toward b (>0)
-        const bDot=-(bvx*nx+bvy*ny); // b moving toward p (>0)
-        const pSpeed=Math.sqrt(pvx*pvx+pvy*pvy);
-        const bSpeed=Math.sqrt(bvx*bvx+bvy*bvy);
-        const pMoving=pSpeed>0.8;
-        const bMoving=bSpeed>0.8;
-
-        if(pDot>0.5&&(!bMoving||(bDot<-0.3))){
-          // P hits B from behind or while B is still
-          setHP('b',bHp-10*pt.atkMult);
-          showDmg(bx-T_R,by-T_R-14,'-10','#D85A30');
-          log('Frappe dans le dos! Bots -10');
-        } else if(bDot>0.5&&(!pMoving||(pDot<-0.3))){
-          // B hits P from behind
-          setHP('p',pHp-10/pt.defMult);
-          showDmg(px-T_R,py-T_R-14,'-10','#534AB7');
-          log('Frappe dans le dos! '+(currentPlayer?.name||'Joueur')+' -10');
-        } else {
-          // Frontal
-          setHP('p',pHp-5/pt.defMult);
-          setHP('b',bHp-5*pt.atkMult);
-          showDmg(px-T_R,py-T_R-14,'-5','#534AB7');
-          showDmg(bx-T_R,by-T_R-14,'-5','#D85A30');
-          log('Choc frontal! -5 chacun');
+    // --- SAUVEGARDE ---
+    function save() { localStorage.setItem('toupie_save', JSON.stringify(player)); }
+    function load() {
+        const data = localStorage.getItem('toupie_save');
+        if(data) {
+            player = JSON.parse(data);
+            updateUI();
+            document.getElementById('name-modal').classList.remove('show');
         }
-      }
-      lastCollision=now;
     }
 
-    // --- RECOIL: always separate toupies after contact ---
-    // Apply strong bounce along normal
-    if(rv<0){
-      pvx-=rv*nx*1.1; pvy-=rv*ny*1.1;
-      bvx+=rv*nx*1.1; bvy+=rv*ny*1.1;
+    function updateUI() {
+        document.getElementById('units-val').textContent = player.units;
+        document.getElementById('p-name').textContent = player.name;
+        document.getElementById('level-info').textContent = "Niveau " + player.level;
     }
 
-    // Force minimum separation speed so toupies don't stay glued
-    const sepVx=pvx-bvx, sepVy=pvy-bvy;
-    const sepDot=sepVx*nx+sepVy*ny;
-    if(sepDot<MIN_SEP_SPEED){
-      const diff=MIN_SEP_SPEED-sepDot;
-      pvx+=nx*diff*0.5; pvy+=ny*diff*0.5;
-      bvx-=nx*diff*0.5; bvy-=ny*diff*0.5;
+    // --- INITIALISATION ---
+    document.getElementById('name-confirm').onclick = () => {
+        const val = document.getElementById('name-input').value.trim();
+        if(val) {
+            player.name = val;
+            save();
+            updateUI();
+            document.getElementById('name-modal').classList.remove('show');
+        }
+    };
+
+    // --- LOGIQUE DE JEU ---
+    function startCountdown() {
+        if(gameActive) return;
+        spinBtn.disabled = true;
+        const cd = document.getElementById('cd-overlay');
+        const txt = document.getElementById('cd-text');
+        cd.classList.add('show');
+        
+        let count = 3;
+        txt.textContent = count;
+        
+        const timer = setInterval(() => {
+            count--;
+            if(count > 0) txt.textContent = count;
+            else if(count === 0) txt.textContent = "GO!";
+            else {
+                clearInterval(timer);
+                cd.classList.remove('show');
+                launch();
+            }
+        }, 800);
     }
 
-    // Also push apart positionally if overlapping
-    const overlap=(T_R*2+2)-dist;
-    if(overlap>0){
-      px+=nx*overlap*0.6; py+=ny*overlap*0.6;
-      bx-=nx*overlap*0.6; by-=ny*overlap*0.6;
+    function launch() {
+        gameActive = true;
+        pHp = 100; bHp = 100;
+        updateHpBars();
+        pEl.classList.add('spinning');
+        bEl.classList.add('spinning');
+        
+        // Impulsion initiale
+        pvx = 5; bvx = -5;
+        loop();
     }
 
-    pEl.classList.add('hitting'); bEl.classList.add('hitting');
-    setTimeout(()=>{pEl.classList.remove('hitting');bEl.classList.remove('hitting');},180);
-  }
+    function updateHpBars() {
+        document.getElementById('p-hp-fill').style.width = pHp + "%";
+        document.getElementById('b-hp-fill').style.width = bHp + "%";
+    }
 
-  if(bHp<=0||pHp<=0){endGame(bHp<=0);return;}
-  raf=requestAnimationFrame(loop);
-}
+    function loop() {
+        if(!gameActive) return;
 
-function endGame(win){
-  gameOver=true; gameRunning=false;
-  pEl.classList.remove('spinning'); bEl.classList.remove('spinning');
-  if(win){
-    setUnits(currentPlayer.units+2);
-    resultTitle.textContent='🏆 Victoire, '+currentPlayer.name+'!';
-    resultSub.textContent='+2 unites! Total: '+currentPlayer.units+' 💎';
-    log('Bravo '+currentPlayer.name+'! +2 unites!');
-  } else {
-    resultTitle.textContent='Defaite...';
-    resultSub.textContent='Reessaie '+currentPlayer.name+'!';
-    log('Defaite... Courage!');
-  }
-  resultOverlay.classList.add('show');
-}
+        // Physique Bot
+        const angle = Math.atan2(py - by, px - bx);
+        bvx += Math.cos(angle) * 0.2;
+        bvy += Math.sin(angle) * 0.2;
 
-function resetGame(){
-  resultOverlay.classList.remove('show');
-  pHp=100; bHp=100; setHP('p',100); setHP('b',100);
-  px=55; py=140; bx=245; by=140; pvx=0;pvy=0;bvx=0;bvy=0;
-  setPos(pEl,px,py); setPos(bEl,bx,by);
-  pEl.textContent=getPlayerType().icon;
-  bEl.textContent='🤖'; bEl.style.background='';
-  spinBtn.disabled=false;
-  log('Lance ta toupie!');
-}
+        // Friction
+        pvx *= 0.98; pvy *= 0.98;
+        bvx *= 0.98; bvy *= 0.98;
 
-// ===== TOUCH CONTROLS =====
-function getArenaPos(e){
-  const rect=arenaEl.getBoundingClientRect();
-  const src=e.touches?e.touches[0]:e;
-  return[src.clientX-rect.left,src.clientY-rect.top];
-}
-arenaEl.addEventListener('touchstart',e=>{if(!gameRunning)return;e.preventDefault();dragging=true;[targetX,targetY]=getArenaPos(e);},{passive:false});
-arenaEl.addEventListener('touchmove',e=>{if(!gameRunning||!dragging)return;e.preventDefault();[targetX,targetY]=getArenaPos(e);},{passive:false});
-arenaEl.addEventListener('touchend',e=>{e.preventDefault();dragging=false;},{passive:false});
-arenaEl.addEventListener('mousedown',e=>{if(!gameRunning)return;dragging=true;[targetX,targetY]=getArenaPos(e);});
-arenaEl.addEventListener('mousemove',e=>{if(!gameRunning||!dragging)return;[targetX,targetY]=getArenaPos(e);});
-arenaEl.addEventListener('mouseup',()=>dragging=false);
-arenaEl.addEventListener('mouseleave',()=>dragging=false);
+        px += pvx; py += pvy;
+        bx += bvx; by += bvy;
 
-spinBtn.addEventListener('click',startCountdown);
-resultBtn.addEventListener('click',resetGame);
-document.getElementById('shop-btn').addEventListener('click',()=>shopModal.classList.add('show'));
-document.getElementById('shop-close').addEventListener('click',()=>shopModal.classList.remove('show'));
+        // Collision Murs (Cercle)
+        [px, py, pvx, pvy] = checkWall(px, py, pvx, pvy, 'p');
+        [bx, by, bvx, bvy] = checkWall(bx, by, bvx, bvy, 'b');
 
-// ===== BASKET =====
-function renderBasket(){
-  document.querySelectorAll('.basket-item:not(#basket-def)').forEach(e=>e.remove());
-  if(!currentPlayer)return;
-  const active=currentPlayer.activeIdx;
-  document.getElementById('basket-def').className='basket-item'+(active===-1?' active-slot':'');
-  currentPlayer.basket.forEach((t,i)=>{
-    const d=document.createElement('div');
-    d.className='basket-item'+(active===i?' active-slot':'');
-    d.innerHTML=`<span>${t.icon}</span><span>${t.label}</span>`;
-    d.addEventListener('click',()=>selectSlot(i,d));
-    basketEl.appendChild(d);
-  });
-}
+        // Collision Toupies
+        const dx = px - bx, dy = py - by;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < T_R * 2) {
+            // Rebond
+            const nx = dx / dist, ny = dy / dist;
+            pvx = nx * 8; pvy = ny * 8;
+            bvx = -nx * 8; bvy = -ny * 8;
+            
+            // Dégâts
+            pHp -= 5; bHp -= 8;
+            updateHpBars();
+        }
 
-function selectSlot(idx,el){
-  if(gameRunning||!currentPlayer)return;
-  currentPlayer.activeIdx=idx;
-  document.querySelectorAll('.basket-item').forEach(e=>e.classList.remove('active-slot'));
-  el.classList.add('active-slot');
-  const t=idx===-1?TYPES.def:TYPES[currentPlayer.basket[idx].type];
-  pEl.textContent=t.icon;
-  log('Toupie: '+t.label);
-  saveCurrentPlayer();
-}
-document.getElementById('basket-def').addEventListener('click',function(){selectSlot(-1,this);});
+        // Update Visuel
+        pEl.style.transform = `translate(${px - T_R}px, ${py - T_R}px)`;
+        bEl.style.transform = `translate(${bx - T_R}px, ${by - T_R}px)`;
 
-// ===== SHOP =====
-document.querySelectorAll('.buy-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    if(!currentPlayer)return;
-    const cost=parseInt(btn.dataset.cost);
-    if(currentPlayer.units<cost)return;
-    setUnits(currentPlayer.units-cost);
-    currentPlayer.basket.push({icon:btn.dataset.icon,label:btn.dataset.name,type:btn.dataset.type});
-    saveCurrentPlayer();
-    renderBasket();
-    const orig=btn.textContent;
-    btn.textContent='Achete!'; btn.disabled=true;
-    setTimeout(()=>{btn.textContent=orig;updateShopBtns();},1500);
-  });
-});
+        if(pHp <= 0 || bHp <= 0) return endGame(bHp <= 0);
+        
+        raf = requestAnimationFrame(loop);
+    }
 
-// ===== LEVEL UP =====
-const lvlupModal=document.createElement('div');
-lvlupModal.className='modal-bg';
-lvlupModal.id='lvlup-modal';
-lvlupModal.innerHTML=`<div class="modal-card"><h2>🎉 10 unites atteintes!</h2><p>Tu peux passer au Niveau 2!<br>Veux-tu continuer ou rester au niveau 1?</p><button class="btn-primary" id="lvlup-go">Passer au Niveau 2!</button><button class="btn-secondary" id="lvlup-stay">Rester Niveau 1</button></div>`;
-document.body.appendChild(lvlupModal);
-document.getElementById('lvlup-go').addEventListener('click',()=>{
-  currentPlayer.level=2;
-  document.getElementById('level-info').textContent='Niveau 2';
-  lvlupModal.classList.remove('show');
-  saveCurrentPlayer();
-  log('Bienvenue au Niveau 2!');
-});
-document.getElementById('lvlup-stay').addEventListener('click',()=>{
-  lvlupModal.classList.remove('show');
-  lvlupShown=false;
-});
+    function checkWall(x, y, vx, vy, who) {
+        const dx = x - CX, dy = y - CY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist > R - T_R) {
+            const angle = Math.atan2(dy, dx);
+            x = CX + Math.cos(angle) * (R - T_R);
+            y = CY + Math.sin(angle) * (R - T_R);
+            return [x, y, -vx * 0.8, -vy * 0.8];
+        }
+        return [x, y, vx, vy];
+    }
 
-// ===== INIT =====
-setPos(pEl,px,py); setPos(bEl,bx,by);
-profiles=loadProfiles();
+    function endGame(win) {
+        gameActive = false;
+        cancelAnimationFrame(raf);
+        pEl.classList.remove('spinning');
+        bEl.classList.remove('spinning');
+        
+        const title = document.getElementById('result-title');
+        if(win) {
+            player.units += 5;
+            title.textContent = "VICTOIRE ! 🏆";
+            document.getElementById('result-sub').textContent = "+5 Diamants";
+        } else {
+            title.textContent = "DÉFAITE... 💀";
+            document.getElementById('result-sub').textContent = "Réessaie encore !";
+        }
+        save();
+        updateUI();
+        resOverlay.classList.add('show');
+    }
+
+    function reset() {
+        resOverlay.classList.remove('show');
+        px = 60; py = 160; bx = 260; by = 160;
+        pvx = 0; pvy = 0; bvx = 0; bvy = 0;
+        pHp = 100; bHp = 100;
+        updateHpBars();
+        pEl.style.transform = `translate(${px - T_R}px, ${py - T_R}px)`;
+        bEl.style.transform = `translate(${bx - T_R}px, ${by - T_R}px)`;
+        spinBtn.disabled = false;
+    }
+
+    // --- CONTROLES TACTILES ---
+    const arena = document.getElementById('arena');
+    function handleTouch(e) {
+        if(!gameActive) return;
+        const rect = arena.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        const tx = touch.clientX - rect.left;
+        const ty = touch.clientY - rect.top;
+        
+        // Attirance vers le doigt
+        pvx += (tx - px) * 0.05;
+        pvy += (ty - py) * 0.05;
+    }
+
+    arena.addEventListener('touchstart', (e) => { e.preventDefault(); handleTouch(e); });
+    arena.addEventListener('touchmove', (e) => { e.preventDefault(); handleTouch(e); });
+    arena.addEventListener('mousemove', (e) => { if(e.buttons) handleTouch(e); });
+
+    // BOUTON REJOUER (Fix Mobile)
+    const resBtn = document.getElementById('result-btn');
+    resBtn.addEventListener('click', reset);
+    resBtn.addEventListener('touchstart', (e) => { e.preventDefault(); reset(); });
+
+    // BOUTON Lancer
+    spinBtn.addEventListener('click', startCountdown);
+    spinBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startCountdown(); });
+
+    // INIT
+    load();
+    reset();
 </script>
+
 </body>
 </html>
